@@ -1,0 +1,3 @@
+# Utilizador para o teste da Tese (EAP-pwd)
+# Formato: "identidade"   Método   "password"
+"teste"		PWD		"password123"
