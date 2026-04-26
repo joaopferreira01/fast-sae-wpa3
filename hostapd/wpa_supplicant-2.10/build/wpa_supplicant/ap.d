@@ -1,0 +1,51 @@
+/home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/build/wpa_supplicant/ap.o: \
+ ap.c \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/utils/includes.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/utils/build_config.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/utils/common.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/utils/os.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/utils/wpa_debug.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/utils/wpabuf.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/utils/eloop.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/utils/uuid.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/common/ieee802_11_defs.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/common/wpa_ctrl.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/eapol_supp/eapol_supp_sm.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/common/defs.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/crypto/dh_group5.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/ap/hostapd.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/utils/list.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/ap/ap_config.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/utils/ip_addr.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/common/wpa_common.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/common/ieee802_11_common.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/common/defs.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/common/ieee802_11_defs.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/crypto/sha256.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/wps/wps.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/wps/wps_defs.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/fst/fst.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/ap/vlan.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/drivers/driver.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/pae/ieee802_1x_kay.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/common/ieee802_1x_defs.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/ap/ap_config.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/ap/ap_drv_ops.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/ap/ieee802_11.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/ap/beacon.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/ap/ieee802_1x.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/ap/wps_hostapd.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/ap/ctrl_iface_ap.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/ap/dfs.h \
+ config_ssid.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/eap_peer/eap_config.h \
+ config.h wpa_supplicant_i.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/utils/bitfield.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/common/sae.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/crypto/sha384.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/wps/wps_defs.h \
+ wmm_ac.h driver_i.h p2p_supplicant.h ap.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/ap/sta_info.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/utils/list.h \
+ notify.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/p2p/p2p.h

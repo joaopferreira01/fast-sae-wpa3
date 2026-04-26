@@ -1,0 +1,21 @@
+/home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/build/wpa_supplicant/src/pae/ieee802_1x_kay.o: \
+ ../src/pae/ieee802_1x_kay.c \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/utils/includes.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/utils/build_config.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/utils/common.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/utils/os.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/utils/wpa_debug.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/utils/wpabuf.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/utils/list.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/utils/eloop.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/utils/wpabuf.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/utils/state_machine.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/l2_packet/l2_packet.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/common/eapol_common.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/crypto/aes_wrap.h \
+ ../src/pae/ieee802_1x_cp.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/common/defs.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/common/ieee802_1x_defs.h \
+ ../src/pae/ieee802_1x_key.h ../src/pae/ieee802_1x_kay.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/utils/list.h \
+ ../src/pae/ieee802_1x_kay_i.h ../src/pae/ieee802_1x_secy_ops.h

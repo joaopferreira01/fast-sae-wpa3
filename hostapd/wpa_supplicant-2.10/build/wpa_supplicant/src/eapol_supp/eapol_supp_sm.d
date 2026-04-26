@@ -1,0 +1,21 @@
+/home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/build/wpa_supplicant/src/eapol_supp/eapol_supp_sm.o: \
+ ../src/eapol_supp/eapol_supp_sm.c \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/utils/includes.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/utils/build_config.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/utils/common.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/utils/os.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/utils/wpa_debug.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/utils/wpabuf.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/utils/state_machine.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/utils/wpabuf.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/utils/eloop.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/crypto/crypto.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/crypto/md5.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/common/eapol_common.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/eap_peer/eap.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/common/defs.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/eap_common/eap_defs.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/eap_peer/eap_methods.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/eap_peer/eap_config.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/eap_peer/eap_proxy.h \
+ ../src/eapol_supp/eapol_supp_sm.h

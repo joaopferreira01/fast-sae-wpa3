@@ -1,0 +1,26 @@
+/home/user/Desktop/wpa3_original/hostapd/hostapd-2.10/build/hostapd/src/ap/neighbor_db.o: \
+ ../src/ap/neighbor_db.c \
+ /home/user/Desktop/wpa3_original/hostapd/hostapd-2.10/src/utils/includes.h \
+ /home/user/Desktop/wpa3_original/hostapd/hostapd-2.10/src/utils/build_config.h \
+ /home/user/Desktop/wpa3_original/hostapd/hostapd-2.10/src/utils/common.h \
+ /home/user/Desktop/wpa3_original/hostapd/hostapd-2.10/src/utils/os.h \
+ /home/user/Desktop/wpa3_original/hostapd/hostapd-2.10/src/utils/wpa_debug.h \
+ /home/user/Desktop/wpa3_original/hostapd/hostapd-2.10/src/utils/wpabuf.h \
+ /home/user/Desktop/wpa3_original/hostapd/hostapd-2.10/src/utils/crc32.h \
+ ../src/ap/hostapd.h \
+ /home/user/Desktop/wpa3_original/hostapd/hostapd-2.10/src/common/defs.h \
+ /home/user/Desktop/wpa3_original/hostapd/hostapd-2.10/src/utils/list.h \
+ ../src/ap/ap_config.h \
+ /home/user/Desktop/wpa3_original/hostapd/hostapd-2.10/src/utils/ip_addr.h \
+ /home/user/Desktop/wpa3_original/hostapd/hostapd-2.10/src/common/wpa_common.h \
+ /home/user/Desktop/wpa3_original/hostapd/hostapd-2.10/src/common/ieee802_11_defs.h \
+ /home/user/Desktop/wpa3_original/hostapd/hostapd-2.10/src/common/ieee802_11_common.h \
+ /home/user/Desktop/wpa3_original/hostapd/hostapd-2.10/src/common/defs.h \
+ /home/user/Desktop/wpa3_original/hostapd/hostapd-2.10/src/common/ieee802_11_defs.h \
+ /home/user/Desktop/wpa3_original/hostapd/hostapd-2.10/src/crypto/sha256.h \
+ /home/user/Desktop/wpa3_original/hostapd/hostapd-2.10/src/wps/wps.h \
+ /home/user/Desktop/wpa3_original/hostapd/hostapd-2.10/src/wps/wps_defs.h \
+ /home/user/Desktop/wpa3_original/hostapd/hostapd-2.10/src/fst/fst.h \
+ ../src/ap/vlan.h \
+ /home/user/Desktop/wpa3_original/hostapd/hostapd-2.10/src/drivers/driver.h \
+ ../src/ap/ieee802_11.h ../src/ap/neighbor_db.h

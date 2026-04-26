@@ -1,0 +1,25 @@
+/home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/build/wpa_supplicant/src/eap_peer/eap.o: \
+ ../src/eap_peer/eap.c \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/utils/includes.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/utils/build_config.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/utils/common.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/utils/os.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/utils/wpa_debug.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/utils/wpabuf.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/utils/pcsc_funcs.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/utils/state_machine.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/utils/ext_password.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/crypto/crypto.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/crypto/tls.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/crypto/sha256.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/common/wpa_ctrl.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/eap_common/eap_wsc_common.h \
+ ../src/eap_peer/eap_i.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/utils/wpabuf.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/utils/list.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/eap_peer/eap.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/common/defs.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/eap_common/eap_defs.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/eap_peer/eap_methods.h \
+ /home/user/Desktop/wpa3_original/hostapd/wpa_supplicant-2.10/src/eap_common/eap_common.h \
+ ../src/eap_peer/eap_config.h

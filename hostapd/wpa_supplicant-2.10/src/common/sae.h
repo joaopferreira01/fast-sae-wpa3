@@ -119,9 +119,13 @@ struct sae_data {
     int mitigation_enabled;    // Flag para saber se deve usar PBKDF2
 
     u8 tese_ticket[128]; // Espaço para o ticket cifrado
-    size_t tese_ticket_len;
-    int has_tese_ticket;
-	
+    size_t ticket_len;
+    int has_tese_ticket; 
+
+	struct crypto_bignum *prev_s;
+    struct crypto_ec_point *prev_pe;
+    int willing_to_reuse;
+
 };
 
 int sae_set_group(struct sae_data *sae, int group);

@@ -48,7 +48,12 @@ static u8 tese_pmk_persistente[32];
 static int tese_pmk_set = 0;
 u16 tese_global_iterations = 10; 
 struct timespec start_timer, end_timer;
-
+/* --- Reuso do scalar --- */
+static int cache_ready = 0;
+static u8 cache_p_bin[32];
+static u8 cache_m_bin[32];
+static u8 cache_s_bin[32];
+static u8 cache_pe_bin[64];
 
 
 int sae_set_group(struct sae_data *sae, int group)
@@ -219,6 +224,8 @@ static int sae_test_pwd_seed_ecc(struct sae_data *sae, const u8 *pwd_seed,
 }
 
 
+
+
 /* Returns -1 on fatal failure, 0 if PWE cannot be derived from the provided
  * pwd-seed, or 1 if a valid PWE was derived from pwd-seed. */
 static int sae_test_pwd_seed_ffc(struct sae_data *sae, const u8 *pwd_seed,
@@ -386,7 +393,7 @@ static int sae_derive_pwe_ecc(struct sae_data *sae, const u8 *addr1,
 
     sae_pwd_seed_key(addr1, addr2, mac_salt);
 
-    /* --- DEBUG-TESE: Verificação --- */
+    /* --- Verificação --- */
     wpa_hexdump(MSG_INFO, "[TESE-DEBUG] MAC Salt Ordenado (12 bytes):", mac_salt, sizeof(mac_salt));
 
     /* 2. Loop */
@@ -410,11 +417,10 @@ static int sae_derive_pwe_ecc(struct sae_data *sae, const u8 *addr1,
         /* Converter S para bin para o input do HMAC */
         crypto_bignum_to_bin(bn_s, x_bin, prime_len, prime_len);
 
-		// Esta parte é para usar os MACs, mas por algum motivo n ta a dar
 		const u8 *vec_addr[2]; 
         size_t vec_len[2];
 
-        vec_addr[0] = x_bin;    vec_len[0] = prime_len;   // Scalar S
+        vec_addr[0] = x_bin;    vec_len[0] = prime_len;   // tamanho das variaveis
         vec_addr[1] = mac_salt; vec_len[1] = 12;
 
 		wpa_printf(MSG_INFO, "\033[1;32mCalculating a new pwd_seed to test\033[0m");
@@ -425,10 +431,10 @@ static int sae_derive_pwe_ecc(struct sae_data *sae, const u8 *addr1,
         res = sae_test_pwd_seed_ecc(sae, pwd_seed, prime_bin, qr_bin, qnr_bin, x_cand_bin);
         
         if (res == 1) {
+
 			found_first = 1;
 			found = 1;
 			wpa_printf(MSG_INFO, "SAE-TESE: PE encontrado na iteracao %d", k);
-			
 			/* 1. Carregar coordenada X */
 			crypto_bignum_deinit(x, 0);
 			x = crypto_bignum_init_set(x_cand_bin, prime_len);
@@ -1339,6 +1345,137 @@ static int sae_derive_commit_element_ecc(struct sae_data *sae,
 	return 0;
 }
 
+static int sae_derive_pwe_direct(struct sae_data *sae, const u8 *addr1,
+                                 const u8 *addr2, const u8 *password,
+                                 size_t password_len)
+{
+    struct crypto_bignum *x = NULL, *y = NULL;
+    u8 prime_bin[SAE_MAX_PRIME_LEN];
+    u8 x_cand_bin[SAE_MAX_PRIME_LEN];
+    u8 qr_bin[SAE_MAX_PRIME_LEN];
+    u8 qnr_bin[SAE_MAX_PRIME_LEN];
+    u8 pwd_seed[SHA256_MAC_LEN];
+    u8 x_y[2 * SAE_MAX_ECC_PRIME_LEN];
+    size_t prime_len = sae->tmp->prime_len;
+    u8 hardened_pwd[32];
+    int res = -1;
+
+    // 1. Obter Prime e calcular QR/QNR (O sae_test_pwd_seed precisa disto!)
+    if (crypto_bignum_to_bin(sae->tmp->prime, prime_bin, prime_len, prime_len) < 0) return -1;
+    
+    // QR = 1, QNR = Prime >> 1 (Lógica padrão do Grupo 19)
+    os_memset(qr_bin, 0, sizeof(qr_bin));
+    qr_bin[prime_len - 1] = 0x01;
+    u8 carry = 0;
+    for (size_t i = 0; i < prime_len; i++) {
+        u8 next_val = (prime_bin[i] >> 1) | (carry << 7);
+        carry = prime_bin[i] & 0x01;
+        qnr_bin[i] = next_val;
+    }
+	if (tese_salt_status == 1) {
+		os_memcpy(sae->mitigation_salt, tese_salt_global, 16);
+		sae->mitigation_enabled = 1;
+	}
+    PKCS5_PBKDF2_HMAC((const char *)password, password_len, 
+                      sae->mitigation_salt, 16, 
+                      tese_global_iterations, EVP_sha256(), 32, hardened_pwd);
+
+    // 3. Gerar o pwd_seed usando o Scalar
+    u8 mac_salt[12];
+    sae_pwd_seed_key(addr1, addr2, mac_salt); // Garante a ordem correta dos MACs
+
+    const u8 *vec_addr[2];
+    size_t vec_len[2];
+    vec_addr[0] = cache_s_bin;
+    vec_len[0] = 32;
+    vec_addr[1] = mac_salt;
+    vec_len[1] = 12;
+
+    hmac_sha256_vector(hardened_pwd, 32, 2, vec_addr, vec_len, pwd_seed);
+
+	// 4. teste da seed/x
+    res = sae_test_pwd_seed_ecc(sae, pwd_seed, prime_bin, qr_bin, qnr_bin, x_cand_bin);
+    if (res != 1) {
+        wpa_printf(MSG_ERROR, "[TESE] Erro: pwd_seed invalido para este scalar! res=%d", res);
+        return -1;
+    }
+
+    // 5. Reconstruir o Ponto PE
+    x = crypto_bignum_init_set(x_cand_bin, prime_len);
+    y = crypto_ec_point_compute_y_sqr(sae->tmp->ec, x);
+    if (!y || dragonfly_sqrt(sae->tmp->ec, y, y) < 0) goto fail;
+
+    // Ajuste de paridade (Obrigatório no SAE)
+    crypto_bignum_to_bin(y, x_y + prime_len, prime_len, prime_len);
+    if ((pwd_seed[SHA256_MAC_LEN - 1] & 0x01) != (x_y[prime_len + prime_len - 1] & 0x01)) {
+        crypto_bignum_sub(sae->tmp->prime, y, y);
+    }
+
+    os_memcpy(x_y, x_cand_bin, prime_len);
+    crypto_bignum_to_bin(y, x_y + prime_len, prime_len, prime_len);
+    
+    if (sae->tmp->pwe_ecc) crypto_ec_point_deinit(sae->tmp->pwe_ecc, 1);
+    sae->tmp->pwe_ecc = crypto_ec_point_from_bin(sae->tmp->ec, x_y);
+
+    // 6. Restaurar o Scalar para o Commit
+    if (sae->tmp->own_commit_scalar) crypto_bignum_deinit(sae->tmp->own_commit_scalar, 1);
+    sae->tmp->own_commit_scalar = crypto_bignum_init_set(cache_s_bin, 32);
+
+    res = 0;
+fail:
+    if (x) crypto_bignum_deinit(x, 1);
+    if (y) crypto_bignum_deinit(y, 1);
+    return res;
+}
+
+
+static int sae_derive_commit_reuse_with_delta(struct sae_data *sae)
+{
+    struct crypto_bignum *p_old, *m_old, *delta, *p_new, *m_new, *s_final;
+    int ret;
+
+    p_old = crypto_bignum_init_set(cache_p_bin, 32);
+    m_old = crypto_bignum_init_set(cache_m_bin, 32);
+    delta = crypto_bignum_init();
+    crypto_bignum_rand(delta, sae->tmp->order);
+
+    p_new = crypto_bignum_init();
+    m_new = crypto_bignum_init();
+    s_final = crypto_bignum_init();
+
+    crypto_bignum_add(p_old, delta, p_new);
+    crypto_bignum_mod(p_new, sae->tmp->order, p_new);
+
+    if (crypto_bignum_cmp(m_old, delta) >= 0) {
+        crypto_bignum_sub(m_old, delta, m_new);
+    } else {
+        crypto_bignum_add(m_old, sae->tmp->order, m_new);
+        crypto_bignum_sub(m_new, delta, m_new);
+    }
+    crypto_bignum_mod(m_new, sae->tmp->order, m_new);
+
+    crypto_bignum_add(p_new, m_new, s_final);
+    crypto_bignum_mod(s_final, sae->tmp->order, s_final);
+
+    // Limpar o que estava no tmp e pôr os novos
+    crypto_bignum_deinit(sae->tmp->sae_rand, 1);
+    sae->tmp->sae_rand = p_new; 
+    crypto_bignum_deinit(sae->tmp->own_commit_scalar, 0);
+    sae->tmp->own_commit_scalar = s_final; 
+
+    ret = sae_derive_commit_element_ecc(sae, m_new);
+
+    // Atualizar cache para a próxima vez
+    crypto_bignum_to_bin(p_new, cache_p_bin, 32, 32);
+    crypto_bignum_to_bin(m_new, cache_m_bin, 32, 32);
+
+    crypto_bignum_deinit(p_old, 1);
+    crypto_bignum_deinit(m_old, 1);
+    crypto_bignum_deinit(delta, 1);
+    crypto_bignum_deinit(m_new, 1);
+    return ret;
+}
+
 
 static int sae_derive_commit_element_ffc(struct sae_data *sae,
 					 struct crypto_bignum *mask)
@@ -1376,12 +1513,6 @@ static int sae_derive_commit(struct sae_data *sae) // preparar o pacote
 
     if (!mask || !sae->tmp->sae_rand || !sae->tmp->own_commit_scalar) goto fail;
 
-    /* Reutiliza S (já calculado) e P (já calculado). */
-    /* Recalcula apenas a Máscara: M = (S - P) mod q */
-	// Isto acontece para permitir o calculo da KCK
-	// Se eu anteriormente tivesse guardado o valor de M, mais tarde tinha q ir à função sae_derive_keys recalcular o valor de P
-	// Portanto, assim mexo so em duas funções em vez de 3.
-    
     
     if (crypto_bignum_cmp(sae->tmp->own_commit_scalar, sae->tmp->sae_rand) >= 0) {
 		// Se S >= P é direto => M = S - P
@@ -1399,7 +1530,7 @@ static int sae_derive_commit(struct sae_data *sae) // preparar o pacote
 	// Ja temos o valor de S para o pacote. Agora que calculamos o valor de M podemos calcular
 	// o valor de E, que é a segunda variavel do pacote
 
-    // Calcular o Element E = inv(M) * PWE
+    // Calcular o Element E = inv(M) * PE
     wpa_printf(MSG_INFO, C_MAGENTA "E = -m * PE" C_RESET);
     ret = (sae->tmp->ec && sae_derive_commit_element_ecc(sae, mask) < 0) ||
           (sae->tmp->dh && sae_derive_commit_element_ffc(sae, mask) < 0);
@@ -1413,7 +1544,16 @@ int sae_prepare_commit(const u8 *addr1, const u8 *addr2,
 		       const u8 *password, size_t password_len,
 		       struct sae_data *sae)
 {
+	int res;
+	if (cache_ready && !fast_path_ready) {
+        if (sae->tmp == NULL && sae_set_group(sae, sae->group) < 0) return -1;
 
+        if (sae_derive_pwe_direct(sae, addr1, addr2, password, password_len) < 0)
+            return -1;
+
+        return sae_derive_commit_reuse_with_delta(sae);
+    }
+	
 	if (fast_path_ready) {
 		if (sae->tmp == NULL && sae_set_group(sae, sae->group) < 0) {
 			wpa_printf(MSG_ERROR, "Erro ao inicializar grupo!");
@@ -1422,7 +1562,7 @@ int sae_prepare_commit(const u8 *addr1, const u8 *addr2,
 		wpa_printf(MSG_INFO, "Recovering ticket");
 		// 2. Restaurar os dados do ticket
 		os_memcpy(sae->tese_ticket, ticket, ticket_len);
-		sae->tese_ticket_len = ticket_len;
+		sae->ticket_len = ticket_len;
 		sae->has_tese_ticket = 1;
 
 		sae->h2e = 0;
@@ -1440,7 +1580,21 @@ int sae_prepare_commit(const u8 *addr1, const u8 *addr2,
 
 	sae->h2e = 0;
 	sae->pk = 0;
-	return sae_derive_commit(sae);
+	res = sae_derive_commit(sae);
+	if (res == 0 && !fast_path_ready) {
+		if (crypto_bignum_to_bin(sae->tmp->own_commit_scalar, cache_s_bin, 32, 32) < 0) {
+        }
+        crypto_bignum_to_bin(sae->tmp->sae_rand, cache_p_bin, 32, 32);
+        struct crypto_bignum *m_orig = crypto_bignum_init();
+        crypto_bignum_sub(sae->tmp->own_commit_scalar, sae->tmp->sae_rand, m_orig);
+        crypto_bignum_mod(m_orig, sae->tmp->order, m_orig);
+        crypto_bignum_to_bin(m_orig, cache_m_bin, 32, 32);
+        
+        crypto_ec_point_to_bin(sae->tmp->ec, sae->tmp->pwe_ecc, cache_pe_bin, cache_pe_bin + 32);
+        cache_ready = 1;
+        crypto_bignum_deinit(m_orig, 1);
+    }
+	return res;
 }
 
 
@@ -1614,7 +1768,7 @@ static int sae_derive_keys(struct sae_data *sae, const u8 *k)
 
 	if (sae->send_confirm == 0x55AA) {
         u8 chaves_derivadas[64];
-        // Garantir que temos a PMK base
+        // Garantir que temos a PMK 
         os_memcpy(sae->pmk, tese_pmk_persistente, 32);
         wpa_hexdump(MSG_INFO, "PMK:", sae->pmk, 32);
 
@@ -1628,10 +1782,10 @@ static int sae_derive_keys(struct sae_data *sae, const u8 *k)
         os_memcpy(sae->tmp->kck, chaves_derivadas, 32);
         sae->tmp->kck_len = 32;
         
-        // Atualizar a sae->pmk para o 4-Way Handshake (EAPOL)
+        // Atualizar a sae->pmk para o 4-Way Handshake
         os_memcpy(sae->pmk, chaves_derivadas + 32, 32); 
 
-        return 0; // SAIR AQUI! Não deixa o código original correr.
+        return 0; 
     }
 
 	tmp = crypto_bignum_init();
@@ -1808,7 +1962,7 @@ int sae_write_commit(struct sae_data *sae, struct wpabuf *buf,
         u8 *scalar_pos = wpabuf_put(buf, sae->tmp->prime_len);
         os_memset(scalar_pos, 0, sae->tmp->prime_len);
 
-        /* 3. ESCREVER O TICKET (32 bytes) */
+        /* 3. ESCREVER O TICKET */
         wpabuf_put_data(buf, ticket, ticket_len);
 
         wpa_printf(MSG_INFO, "\033[1;35mAuth-Commit(s_a, ticket)");
@@ -1830,7 +1984,6 @@ int sae_write_commit(struct sae_data *sae, struct wpabuf *buf,
         return -1;
     wpa_hexdump(MSG_DEBUG, "SAE: own commit-scalar",
             pos, sae->tmp->prime_len);
-
     if (sae->tmp->ec) {
         /* Verificar se o ponto existe na memoria */
         if (sae->tmp->own_commit_element_ecc == NULL) {
@@ -2282,7 +2435,6 @@ u16 sae_parse_commit(struct sae_data *sae, const u8 *data, size_t len,
     pos += 2; 
 	u8 scalar_one[32] = {0};
     scalar_one[31] = 0x01;
-    /* --- SAE-TESE: VERIFICAÇÃO IMEDIATA --- */
     if (end - pos >= 32 && os_memcmp(pos, zeros, 32) == 0) {
         sae->state = SAE_COMMITTED;
         sae->send_confirm = 0x55AA;
@@ -2296,7 +2448,7 @@ u16 sae_parse_commit(struct sae_data *sae, const u8 *data, size_t len,
         }
 
         // 2. Avançar o ponteiro para o Elemento (e_b)
-        // O s ocupa 32 bytes, o elemento vem logo a seguir
+        // O s ocupa 32 bytes, o element vem logo a seguir
         const u8 *element_pos = pos + 32;
 
 
@@ -2472,24 +2624,23 @@ int sae_write_confirm(struct sae_data *sae, struct wpabuf *buf)
     const u8 *sc;
     size_t hash_len;
 
-	/* --- SAE-TESE: ESCUDO FAST-PATH --- */
     if (sae->send_confirm == 0x55AA && tese_pmk_set) {
         u8 transcript[180]; 
         u8 *pos = transcript;
         u8 verifier_sta[32];
 
 
-        // 1. sA (Alice Scalar) - Esperado: 0
+        // 1. s_a
         if (sae->tmp->own_commit_scalar) {
             crypto_bignum_to_bin(sae->tmp->own_commit_scalar, pos, 32, 32);
         } 
         pos += 32;
 
-        // 2. EA (Alice Ticket) - Esperado: Ticket de 80 bytes
+        // 2. e_a
         os_memcpy(pos, sae->tese_ticket, 80);
         pos += 80;
 
-        // 3. sB (AP Scalar) - Esperado: 0
+        // 3. s_b
         if (sae->peer_commit_scalar) {
             crypto_bignum_to_bin(sae->peer_commit_scalar, pos, 32, 32);
         } else {
@@ -2497,7 +2648,7 @@ int sae_write_confirm(struct sae_data *sae, struct wpabuf *buf)
         }
         pos += 32;
 
-        // 4. EB (AP Random) - Esperado: Valor do AP
+        // 4. e_b
         if (sae->tmp->ec && sae->tmp->peer_commit_element_ecc) {
 			crypto_bignum_to_bin(sae->tmp->peer_commit_element_ecc, pos, 32, 32);
         } else {
@@ -2508,6 +2659,7 @@ int sae_write_confirm(struct sae_data *sae, struct wpabuf *buf)
 
         // Calcular o HMAC
 		size_t tr_len = (size_t)(pos - transcript);
+		/* No sae.c, dentro da sae_write_confirm */
         hmac_sha256(sae->tmp->kck, 32, transcript, (size_t)(pos - transcript), verifier_sta);
 
         // ESCREVER NO BUFFER
@@ -2582,17 +2734,17 @@ int sae_check_confirm(struct sae_data *sae, const u8 *data, size_t len)
 
         wpa_printf(MSG_INFO, "\033[1;35mVerify c_b\033[0m");
 
-        // 1. sA (Alice Scalar) - Esperado: 0
+        // 1. s_a
         if (sae->tmp->own_commit_scalar) {
             crypto_bignum_to_bin(sae->tmp->own_commit_scalar, pos, 32, 32);
         } 
         pos += 32;
 
-        // 2. EA (Alice Ticket) - Esperado: Ticket de 80 bytes
+        // 2. e_a
         os_memcpy(pos, sae->tese_ticket, 80);
         pos += 80;
 
-        // 3. sB (AP Scalar) - Esperado: 0
+        // 3. s_b
         if (sae->peer_commit_scalar) {
             crypto_bignum_to_bin(sae->peer_commit_scalar, pos, 32, 32);
         } else {
@@ -2600,7 +2752,7 @@ int sae_check_confirm(struct sae_data *sae, const u8 *data, size_t len)
         }
         pos += 32;
 
-        // 4. EB (AP Random) - Esperado: Valor do AP
+        // 4. e_b
         if (sae->tmp->ec && sae->tmp->peer_commit_element_ecc) {
 			crypto_bignum_to_bin(sae->tmp->peer_commit_element_ecc, pos, 32, 32);
         } else {
@@ -2615,14 +2767,11 @@ int sae_check_confirm(struct sae_data *sae, const u8 *data, size_t len)
 
         if (os_memcmp_const(verifier_sta, received_confirm, 32) == 0) {
             sae->state = SAE_ACCEPTED;
-			// return 0;
 			if (sae->tmp->peer_commit_element_ecc) {
-                // Limpamos como Bignum porque foi assim que o criámos no parse_commit
                 crypto_bignum_deinit((struct crypto_bignum *) sae->tmp->peer_commit_element_ecc, 0);
                 sae->tmp->peer_commit_element_ecc = NULL; // Impede o sae_clear_temp_data de crashar
             }
             if (sae->tmp->own_commit_element_ecc) {
-                // Se o cliente também guardou o seu próprio E como bignum:
                 crypto_bignum_deinit((struct crypto_bignum *) sae->tmp->own_commit_element_ecc, 0);
                 sae->tmp->own_commit_element_ecc = NULL;
             }
@@ -2684,11 +2833,12 @@ int sae_check_confirm(struct sae_data *sae, const u8 *data, size_t len)
         os_memset(ticket, 0, sizeof(ticket));
         os_memcpy(ticket, ticket_ptr, 80); 
         ticket_len = 80;
+		// Para ja tenho q comentar um ou outro, dps logo se ve o q faço
+        // fast_path_ready = 0;
         fast_path_ready = 1;
         
-        // Sincronizar sessão
         os_memcpy(sae->tese_ticket, ticket_ptr, 80);
-        sae->tese_ticket_len = 80;
+        sae->ticket_len = 80;
 		return 0;
     } else {
         wpa_hexdump(MSG_INFO, "Não veio o ticket", data, len);

@@ -1,0 +1,13 @@
+/home/user/Desktop/wpa3_original/hostapd/hostapd-2.10/build/hostapd/src/eap_common/eap_pwd_common.o: \
+ ../src/eap_common/eap_pwd_common.c \
+ /home/user/Desktop/wpa3_original/hostapd/hostapd-2.10/src/utils/includes.h \
+ /home/user/Desktop/wpa3_original/hostapd/hostapd-2.10/src/utils/build_config.h \
+ /home/user/Desktop/wpa3_original/hostapd/hostapd-2.10/src/utils/common.h \
+ /home/user/Desktop/wpa3_original/hostapd/hostapd-2.10/src/utils/os.h \
+ /home/user/Desktop/wpa3_original/hostapd/hostapd-2.10/src/utils/wpa_debug.h \
+ /home/user/Desktop/wpa3_original/hostapd/hostapd-2.10/src/utils/wpabuf.h \
+ /home/user/Desktop/wpa3_original/hostapd/hostapd-2.10/src/utils/const_time.h \
+ /home/user/Desktop/wpa3_original/hostapd/hostapd-2.10/src/common/dragonfly.h \
+ /home/user/Desktop/wpa3_original/hostapd/hostapd-2.10/src/crypto/sha256.h \
+ /home/user/Desktop/wpa3_original/hostapd/hostapd-2.10/src/crypto/crypto.h \
+ ../src/eap_common/eap_defs.h ../src/eap_common/eap_pwd_common.h

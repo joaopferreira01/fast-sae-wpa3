@@ -38,8 +38,8 @@ u16 cost;
 
 extern u8 tese_salt_global[16];
 struct sae_ticket_payload {
-    u32 tid;                   // 4 bytes (Início da struct)
-    u8 pmk_prime[SAE_PMK_LEN]; // 32 bytes (Logo a seguir)
+    u32 tid;                   // 4 bytes
+    u8 pmk_prime[SAE_PMK_LEN]; // 32 bytes
     u8 padding[12];            // 12 bytes para perfazer 48 (3 blocos AES de 16)
 };
 
@@ -53,7 +53,7 @@ long get_diff_micro(struct timespec start, struct timespec end) {
 
 static int verify_tid(u32 tid) {
     if (tid == 0) {
-        wpa_printf(MSG_ERROR, "[DEBUG-TID] Rejeitado: TID é zero");
+        wpa_printf(MSG_ERROR, "Rejeitado: TID é zero");
         return -1;
     }
 
@@ -64,19 +64,19 @@ static int verify_tid(u32 tid) {
 
     // Se o TID for igual ou menor, verificamos a janela
     u32 diff = last_seen_tid - tid;
-    wpa_printf(MSG_INFO, "[DEBUG-TID] Diferença calculada: %u", diff);
+    wpa_printf(MSG_INFO, "Diferença calculada: %u", diff);
 
     if (diff >= 64) {
-        wpa_printf(MSG_ERROR, "[DEBUG-TID] Rejeitado: TID demasiado antigo (diff %u >= 64)", diff);
+        wpa_printf(MSG_ERROR, "Rejeitado: TID demasiado antigo (diff %u >= 64)", diff);
         return -1;
     }
 
     if (tid_bitmask & (1ULL << diff)) {
-        wpa_printf(MSG_ERROR, "[DEBUG-TID] Rejeitado: Bit %u na máscara já está marcado (REPLAY)", diff);
+        wpa_printf(MSG_ERROR, "Rejeitado: Bit %u na máscara já está marcado (REPLAY)", diff);
         return -1;
     }
 
-    wpa_printf(MSG_INFO, "[DEBUG-TID] Aceite: TID dentro da janela e não repetido");
+    wpa_printf(MSG_INFO, "Aceite: TID dentro da janela e não repetido");
     return 0;
 }
 
@@ -91,13 +91,12 @@ void update_tid_window(u32 received_tid) {
     tid_bitmask |= (1ULL << diff);
 }
 
-/* Função para CIFRAR o Ticket */
 int sae_encrypt_ticket(const u8 *stek, struct sae_ticket_payload *payload, 
                        u8 *out, size_t *out_len)
 {
     void *ctx;
     
-    // Criamos o contexto do AES (16 bytes = AES-128)
+    // 16 bytes = AES-128
     ctx = aes_encrypt_init(stek, 16);
     if (!ctx) return -1;
 
@@ -121,7 +120,7 @@ int sae_decrypt_ticket(const u8 *stek, const u8 *cipher, size_t cipher_len,
     
     // O cipher_len tem de ser 80 (48 da struct + 32 do MAC)
     if (cipher_len < 80) {
-        wpa_printf(MSG_ERROR, "[AP-TRACE] Erro: Tamanho insuficiente (%zu < 80)", cipher_len);
+        wpa_printf(MSG_ERROR, "Erro: Tamanho insuficiente (%zu < 80)", cipher_len);
         return -1;
     }
 
@@ -132,7 +131,7 @@ int sae_decrypt_ticket(const u8 *stek, const u8 *cipher, size_t cipher_len,
     hmac_sha256(global_stek_mac, 16, cipher, encrypted_len, computed_mac);
 
     if (os_memcmp_const(computed_mac, received_mac, 32) != 0) {
-        wpa_printf(MSG_ERROR, "\033[1;31mSAE-TESE: MAC Inválido! (Mismatch entre pacote e cálculo)\033[0m");
+        wpa_printf(MSG_ERROR, "\033[1;31mMAC Inválido! (Mismatch entre pacote e cálculo)\033[0m");
         wpa_hexdump(MSG_INFO, "Cifra recebida:", cipher, 48);
         wpa_hexdump(MSG_INFO, "MAC recebido:", received_mac, 32);
         wpa_hexdump(MSG_INFO, "MAC calculado:", computed_mac, 32);
@@ -1547,9 +1546,9 @@ int sae_prepare_commit(const u8 *addr1, const u8 *addr2,
         /* B. Derivação Lenta */
 		if (sae->tese_cache_ready) {
 			os_memcpy(hardened_pwd, sae->tese_hardened_pwd_cache, 32);
-			wpa_printf(MSG_INFO, "[TESE] Já fez a derivação uma vez, usa o valor guardado");
+			wpa_printf(MSG_INFO, "Já fez a derivação uma vez, usa o valor guardado");
 		} else {
-			wpa_printf(MSG_INFO, "[TESE] É a primeira, tem que fazer a derivação da password...");
+			wpa_printf(MSG_INFO, "É a primeira, tem que fazer a derivação da password...");
 			PKCS5_PBKDF2_HMAC((const char *)password, password_len, 
 							tese_salt_global, 16, 
 							cost, 
@@ -1566,7 +1565,6 @@ int sae_prepare_commit(const u8 *addr1, const u8 *addr2,
         crypto_bignum_to_bin(sae->peer_commit_scalar, scalar_bin_tmp, prime_len, prime_len); // scalar to bin
 		crypto_bignum_to_bin(sae->tmp->prime, prime_bin, prime_len, prime_len); // prime to bin
 
-		// ate aqui da zero, mas a função a seguir mete os valores logo a 500
 		// definição dos residuos quadraticos usados para a matematica
 		if (dragonfly_get_random_qr_qnr(sae->tmp->prime, &qr, &qnr) < 0 ||
 			crypto_bignum_to_bin(qr, qr_bin, sizeof(qr_bin), prime_len) < 0 ||
@@ -1798,7 +1796,6 @@ static int sae_kdf_hash(size_t hash_len, const u8 *k, const char *label,
 	return -1;
 }
 
-// Verificar esta aqui
 static int sae_derive_keys(struct sae_data *sae, const u8 *k)
 {
 	u8 zero[SAE_MAX_HASH_LEN], val[SAE_MAX_PRIME_LEN];
@@ -1996,29 +1993,28 @@ int sae_write_commit(struct sae_data *sae, struct wpabuf *buf,
     if (sae->tmp == NULL)
         return -1;
 
-    /* --- TESE: RESPOSTA AO TICKET --- */
+    /* --- RESPOSTA AO TICKET --- */
     if (sae->send_confirm == 0x55AA) {
         wpabuf_put_le16(buf, sae->group); 
 
         pos = wpabuf_put(buf, 32); 
         os_memset(pos, 0, 32);
         
-        // 1. Gerar o Random EB
-        u8 random_eb[32];
-        os_get_random(random_eb, 32);
+        // 1. Gerar o Random e_b
+        u8 random_e_b[32];
+        os_get_random(random_e_b, 32);
 
         if (sae->tmp->own_commit_element_ecc) {
             crypto_ec_point_deinit(sae->tmp->own_commit_element_ecc, 0);
             sae->tmp->own_commit_element_ecc = NULL;
         }
         
-        // Agora sim, inicializamos como o nosso "contentor" de 32 bytes
         sae->tmp->own_commit_element_ecc = (struct crypto_ec_point *) 
-            crypto_bignum_init_set(random_eb, 32);
+            crypto_bignum_init_set(random_e_b, 32);
 
-        /* 3. Enviar para a Alice */
+        /* 3. Enviar para o cliente  */
         pos = wpabuf_put(buf, 32);
-        os_memcpy(pos, random_eb, 32);
+        os_memcpy(pos, random_e_b, 32);
 
         return 0; 
     }
@@ -2484,9 +2480,7 @@ u16 sae_parse_commit(struct sae_data *sae, const u8 *data, size_t len,
                     crypto_bignum_deinit(sae->peer_commit_scalar, 0);
                 sae->peer_commit_scalar = crypto_bignum_init_set(data + 2, 32);
 
-                // 2. Guardar o Elemento da Alice (EA) - é o Ticket (80 bytes)
-                // Vamos usar a mesma lógica que usaste na Alice: init_set no campo ecc
-
+                // 2. Guardar o e_a -> é o Ticket (80 bytes)
                 if (sae->tmp->peer_commit_element_ecc)
                     crypto_bignum_deinit((struct crypto_bignum *) sae->tmp->peer_commit_element_ecc, 0);
                 
@@ -2646,39 +2640,34 @@ int sae_write_confirm(struct sae_data *sae, struct wpabuf *buf)
 
         wpa_printf(MSG_INFO, "Generating c_b");
 
-        // 1. sA (Alice Scalar) - No AP é o peer_commit_scalar
+        // 1. s_a
         crypto_bignum_to_bin(sae->peer_commit_scalar, pos, 32, 32);
         pos += 32;
 
-        // 2. EA (Alice Ticket) - O que recebeste da Alice no Commit
-        // Usamos os 80 bytes brutos que o AP guardou
+        // 2. e_a
         crypto_bignum_to_bin((struct crypto_bignum *) sae->tmp->peer_commit_element_ecc, pos, 80, 80);
         pos += 80;
 
 
-        // 3. sB (AP Scalar) - O teu próprio escalar
+        // 3. s _b
         crypto_bignum_to_bin(sae->tmp->own_commit_scalar, pos, 32, 32);
         pos += 32;
 
 
 
-		// 4. EB (AP Random)
+		// 4. e_b
 		if (sae->tmp && sae->tmp->own_commit_element_ecc) {
-			// Forçar a extração de 32 bytes
 			if (crypto_bignum_to_bin((struct crypto_bignum *) sae->tmp->own_commit_element_ecc, 
 									pos, 32, 32) < 0) {
 			}
 		}
 		pos += 32;
 
-        // Calcular o HMAC (cB)
+        // Calcular o HMAC (c_b)
 		size_t tr_len = (size_t)(pos - transcript);
         hmac_sha256(sae->tmp->kck, 32, transcript, (size_t)(pos - transcript), verifier_ap);
 
         // ESCREVER NO PACOTE
-
-
-
         wpabuf_put_le16(buf, 2); // Sequence Number
         u8 *conf_ptr = wpabuf_put(buf, 32); // Reserva 32 bytes
         os_memcpy(conf_ptr, verifier_ap, 32); // Copia o cB calculado
@@ -2741,7 +2730,7 @@ int sae_write_confirm(struct sae_data *sae, struct wpabuf *buf)
         wpabuf_put_data(buf, ticket_mac, 32);          // 32 bytes
     }
 
-    wpa_printf(MSG_INFO, "Auth-Confirm (cB + ticket)");
+    wpa_printf(MSG_INFO, "Auth-Confirm (c_b + ticket)");
 
     return 0;
 }
@@ -2756,15 +2745,14 @@ int sae_check_confirm(struct sae_data *sae, const u8 *data, size_t len)
         return -1;
 
     /* --- TESE: VALIDAÇÃO TICKET --- */
-    /* --- TESE: VALIDAÇÃO DO CONFIRM NO FAST-PATH --- */
     if (sae->send_confirm == 0x55AA) {
         u8 transcript[180]; 
         u8 *pos = transcript;
         u8 verifier_ap[32];
-        const u8 *received_confirm = data + 2; // O cA que veio da Alice
+        const u8 *received_confirm = data + 2; // O c_a que veio do cliente
 
 
-        // 1. sA (Alice Scalar) - No AP é o peer_commit_scalar
+        // 1. s_a
         if (sae->peer_commit_scalar) {
             crypto_bignum_to_bin(sae->peer_commit_scalar, pos, 32, 32);
         } else {
@@ -2773,10 +2761,8 @@ int sae_check_confirm(struct sae_data *sae, const u8 *data, size_t len)
         }
         pos += 32;
 
-        // 2. EA (Alice Ticket) - O AP recebeu no Commit e guardou no bin
-        // Usamos os 80 bytes que o AP extraiu do pacote da Alice
+        // 2. e_a
         if (sae->tmp && sae->tmp->peer_commit_element_ecc) {
-            // Assumindo que o guardaste como bignum no parse_commit do AP
             crypto_bignum_to_bin((struct crypto_bignum *) sae->tmp->peer_commit_element_ecc, pos, 80, 80);
         } else {
             wpa_printf(MSG_ERROR, "Ticket não encontrado!");
@@ -2784,7 +2770,7 @@ int sae_check_confirm(struct sae_data *sae, const u8 *data, size_t len)
         }
         pos += 80;
 
-        // 3. sB (AP Scalar) - No AP é o own_commit_scalar
+        // 3. s_s
         if (sae->tmp && sae->tmp->own_commit_scalar) {
             crypto_bignum_to_bin(sae->tmp->own_commit_scalar, pos, 32, 32);
         } else {
@@ -2792,8 +2778,7 @@ int sae_check_confirm(struct sae_data *sae, const u8 *data, size_t len)
         }
         pos += 32;
 
-        // 4. EB (AP Element/Random) - O teu próprio valor enviado
-        // Como o EB do AP é um ponto válido, usamos a função de conversão
+        // 4. e_b
         if (sae->tmp && sae->tmp->ec && sae->tmp->own_commit_element_ecc) {
 			crypto_bignum_to_bin((struct crypto_bignum *) sae->tmp->own_commit_element_ecc, 
                          pos, 32, 32);
@@ -2803,13 +2788,12 @@ int sae_check_confirm(struct sae_data *sae, const u8 *data, size_t len)
         }
         pos += 32;
 
-        // Calcular HMAC (O AP faz a mesma conta que a Alice fez)
+        // Calcular HMAC
 		size_t tr_len = (size_t)(pos - transcript);
         hmac_sha256(sae->tmp->kck, 32, transcript, (size_t)(pos - transcript), verifier_ap);
 
         // wpa_hexdump(MSG_INFO, "[TESE-DEBUG] KCK que o AP possui", sae->tmp->kck, 32);
 		wpa_printf(MSG_INFO, "\033[1;32mVerify c_a\033[0m");
-        /* 2. Comparação constante para evitar ataques de tempo */
         if (os_memcmp_const(verifier_ap, received_confirm, 32) == 0) {
             sae->state = SAE_ACCEPTED;
             /* --- TESE: GERAÇÃO DO PRÓXIMO TICKET --- */
